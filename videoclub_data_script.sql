@@ -48,14 +48,14 @@ create table devolucion(
 create table copias(
 	id smallserial primary key,
 	id_pelicula smallint not null,
-	numero_copia varchar(),
+	numero_copia varchar(10),
 	disponibilidad boolean not null  
 );
 
 create table peliculas(
 	id smallserial primary key,
 	titulo varchar(100) not null,
-	sinopsis varchar(200) not null,
+	sinopsis varchar(200),
 	id_genero smallint not null,
 	id_director smallint not null
 );
@@ -656,5 +656,42 @@ INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,a
 	 (306,'2024-01-07','6810904Y','Hugo','Torres','Ferrer','hugo.torres.ferrer@gmail.com','649016903','47006','1994-06-05','50','1','Der.','Federico García Lorca','1Der.','La doncella','Thriller','Corea, década de 1930, durante la colonización japonesa. Una joven llamada Sookee es contratada como doncella de una rica mujer japonesa, Hideko, que vive recluida en una gran mansión bajo la influencia de un tirano. Sookee guarda un secreto y con la ayuda de un estafador que se hace pasar por un conde japonés, planea algo para Hideko.','Park Chan-wook','2024-01-07','2024-01-08'),
 	 (308,'2024-01-25','1638778M','Angel','Lorenzo','Caballero','angel.lorenzo.caballero@gmail.com','698073069','47008','2011-07-30','82','1','Izq.','Sol','1Izq.','El bazar de las sorpresas','Comedia','Alfred Kralik es el tímido jefe de vendedores de Matuschek y Compañía, una tienda de Budapest. Todas las mañanas, los empleados esperan juntos la llegada de su jefe, Hugo Matuschek. A pesar de su timidez, Alfred responde al anuncio de un periódico y mantiene un romance por carta. Su jefe decide contratar a una tal Klara Novak en contra de la opinión de Alfred. En el trabajo, Alfred discute constantemente con ella, sin sospechar que es su corresponsal secreta.','Ernst Lubitsch','2024-01-25',NULL);
 
+
+	
+-- INSERTAMOS GENEROS	
 	
 	
+insert into genero (nombre)
+select distinct v.genero
+from tmp_videoclub v;
+
+select * from genero g ;
+
+
+
+-- INSERTAMOS DIRECTORES
+
+insert into director (nombre)
+select distinct v.director
+from tmp_videoclub v;
+
+select * from director d ;
+
+
+
+-- INSERTAMOS PELICULAS
+
+alter table peliculas
+alter column sinopsis drop not null;
+
+insert into peliculas (titulo, id_genero, id_director)
+select distinct v.titulo, g.id, d.id
+from tmp_videoclub v
+join genero g on v.genero = g.nombre
+join director d on v.director = d.nombre;
+
+select * from peliculas p ;
+
+
+
+
