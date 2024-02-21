@@ -1,3 +1,117 @@
+create schema videoclub;
+
+set schema 'videoclub';
+
+create table socio(
+	id_socio smallserial primary key,
+	nombre varchar (70) not null,
+	apellidos varchar (80) not null,
+	fecha_nacimiento date not null,
+	email varchar (60) not null,
+	dni varchar (10) not null
+
+);
+
+
+create table telefono(
+	id smallserial primary key,
+	valor varchar (20) not null,
+	id_socio smallint not null
+);
+
+
+create table direccion(
+    id smallserial primary key,
+    id_socio smallint not null,
+    calle varchar (100),
+    numero varchar (10),
+    piso varchar (10),
+    codigo_postal varchar (10)
+);
+
+
+create table alquiler(
+	id smallserial primary key,
+	id_copia smallint not null,
+	id_socio smallint not null,
+	fecha_entrega date not null
+);
+
+create table devolucion(
+	id smallserial primary key,
+	id_copia smallint not null,
+	id_socio smallint not null,
+	fecha_devolucion date
+);
+
+
+create table copias(
+	id smallserial primary key,
+	id_pelicula smallint not null,
+	numero_copia varchar(10),
+	disponibilidad boolean not null  
+);
+
+create table peliculas(
+	id smallserial primary key,
+	titulo varchar(100) not null,
+	sinopsis varchar(200),
+	id_genero smallint not null,
+	id_director smallint not null
+);
+
+create table genero(
+    id smallserial primary key,
+    nombre varchar(70) not null
+);
+
+create table director(
+    id smallserial primary key,
+    nombre varchar(70) not null
+);
+
+
+
+-- CREAMOS LAS RELACIONES ENTRE TABLAS
+
+alter table telefono
+add constraint fk_socio_telefono
+foreign key (id_socio) references socio(id_socio);
+
+alter table direccion
+add constraint fk_socio_direccion
+foreign key (id_socio) references socio(id_socio);
+
+alter table alquiler
+add constraint fk_socio_alquiler
+foreign key (id_socio) references socio(id_socio);
+
+alter table alquiler
+add constraint fk_copia_alquiler
+foreign key (id_copia) references copias(id);
+
+alter table devolucion
+add constraint fk_socio_devolucion
+foreign key (id_socio) references socio(id_socio);
+
+alter table devolucion
+add constraint fk_copia_devolucion
+foreign key (id_copia) references copias(id);
+
+alter table copias
+add constraint fk_pelicula_copias
+foreign key (id_pelicula) references peliculas(id);
+
+alter table peliculas
+add constraint fk_genero_peliculas
+foreign key (id_genero) references genero(id);
+
+alter table peliculas
+add constraint fk_director_peliculas
+foreign key (id_director) references director(id);
+
+
+
 CREATE TABLE tmp_videoclub (
 	id_copia int4 NULL,
 	fecha_alquiler_texto date NULL,
@@ -21,6 +135,8 @@ CREATE TABLE tmp_videoclub (
 	fecha_alquiler date NULL,
 	fecha_devolucion date NULL
 );
+
+
 INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,apellido_2,email,telefono,codigo_postal,fecha_nacimiento,numero,piso,letra,calle,ext,titulo,genero,sinopsis,director,fecha_alquiler,fecha_devolucion) VALUES
 	 (3,'2024-01-28','1124603H','Ivan','Santana','Medina','ivan.santana.medina@gmail.com','694804631','47007','2005-02-15','6','3','D','Francisco Pizarro','3D','El padrino','Drama','Don Vito Corleone, conocido dentro de los círculos del hampa como ''El Padrino'', es el patriarca de una de las cinco familias que ejercen el mando de la Cosa Nostra en Nueva York en los años cuarenta. Don Corleone tiene cuatro hijos: una chica, Connie, y tres varones; Sonny, Michael y Fredo. Cuando el Padrino reclina intervenir en el negocio de estupefacientes, empieza una cruenta lucha de violentos episodios entre las distintas familias del crimen organizado.','Francis Ford Coppola','2024-01-28',NULL),
 	 (4,'2024-01-30','1396452F','Maria carmen','Crespo','Reyes','maria carmen.crespo.reyes@gmail.com','607425989','47005','2000-11-17','58','1','A','Francisco de Goya','1A','El padrino','Drama','Don Vito Corleone, conocido dentro de los círculos del hampa como ''El Padrino'', es el patriarca de una de las cinco familias que ejercen el mando de la Cosa Nostra en Nueva York en los años cuarenta. Don Corleone tiene cuatro hijos: una chica, Connie, y tres varones; Sonny, Michael y Fredo. Cuando el Padrino reclina intervenir en el negocio de estupefacientes, empieza una cruenta lucha de violentos episodios entre las distintas familias del crimen organizado.','Francis Ford Coppola','2024-01-30','2024-01-31'),
@@ -575,6 +691,7 @@ join genero g on v.genero = g.nombre
 join director d on v.director = d.nombre;
 
 select * from peliculas p ;
+
 
 
 
