@@ -41,7 +41,7 @@ create table alquiler(
 
 create table copias(
 	id smallserial primary key,
-	referencia_copia int4 not null,
+	id_copia_original int4 not null,
 	id_pelicula smallint not null  
 );
 
@@ -82,6 +82,7 @@ foreign key (id_socio) references socio(id_socio);
 alter table alquiler
 add constraint fk_copia_alquiler
 foreign key (id_copia) references copias(id);
+
 
 alter table copias
 add constraint fk_pelicula_copias
@@ -692,32 +693,32 @@ from tmp_videoclub tmp
 join genero g on tmp.genero = g.nombre
 join director d on tmp.director = d.nombre;
 
+select * from peliculas;
 
--- COPIAS (512)
+-- COPIAS (308)
 
-insert into copias (referencia_copia, id_pelicula)
-select id_copia, p.id
+insert into copias (id_copia_original, id_pelicula)
+select distinct id_copia, p.id
 from tmp_videoclub tmp
-inner join peliculas p on tmp.titulo = p.titulo;
+join peliculas p on tmp.titulo = p.titulo;
 
--- ALQUILER (1088)
+
+-- ALQUILER (512)
 
 insert into alquiler (id_copia, id_socio, fecha_entrega, fecha_devolucion)
 select c.id, s.id_socio, tmp.fecha_alquiler, tmp.fecha_devolucion 
 from tmp_videoclub tmp join socio s on tmp.dni = s.dni
-join copias c on tmp.id_copia = c.referencia_copia;
+join copias c on tmp.id_copia = c.id;
    
 
-
-
--- CUANTAS COPIAS TENGO DISPONIBLES (343)
+-- CUANTAS COPIAS TENGO DISPONIBLES (139)
 
 select count (distinct id_copia) as peliculas_disponibles
 from alquiler
 where fecha_devolucion is not null;
 
 
--- CUANTAS TENGO SIN DISPONIBILIDAD (501)
+-- CUANTAS TENGO SIN DISPONIBILIDAD (303)
 
 select count (distinct id_copia) as peliculas_no_disponibles
 from alquiler
