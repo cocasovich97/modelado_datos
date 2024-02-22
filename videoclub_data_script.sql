@@ -4,11 +4,11 @@ set schema 'videoclub';
 
 create table socio(
 	id_socio smallserial primary key,
+	dni varchar(10) not null,
 	nombre varchar (70) not null,
 	apellidos varchar (80) not null,
 	fecha_nacimiento date not null,
-	email varchar (60) not null,
-	dni varchar (10) not null
+	email varchar (60) not null
 
 );
 
@@ -22,7 +22,7 @@ create table telefono(
 
 create table direccion(
     id smallserial primary key,
-    id_socio smallint not null,
+    id_socio smallint,
     calle varchar (100),
     numero varchar (10),
     piso varchar (10),
@@ -34,28 +34,21 @@ create table alquiler(
 	id smallserial primary key,
 	id_copia smallint not null,
 	id_socio smallint not null,
-	fecha_entrega date not null
-);
-
-create table devolucion(
-	id smallserial primary key,
-	id_copia smallint not null,
-	id_socio smallint not null,
+	fecha_entrega date not null,
 	fecha_devolucion date
 );
 
 
 create table copias(
 	id smallserial primary key,
-	id_pelicula smallint not null,
-	numero_copia varchar(10),
-	disponibilidad boolean not null  
+	referencia_copia int4 not null,
+	id_pelicula smallint not null  
 );
 
 create table peliculas(
 	id smallserial primary key,
 	titulo varchar(100) not null,
-	sinopsis varchar(200),
+	sinopsis text,
 	id_genero smallint not null,
 	id_director smallint not null
 );
@@ -88,14 +81,6 @@ foreign key (id_socio) references socio(id_socio);
 
 alter table alquiler
 add constraint fk_copia_alquiler
-foreign key (id_copia) references copias(id);
-
-alter table devolucion
-add constraint fk_socio_devolucion
-foreign key (id_socio) references socio(id_socio);
-
-alter table devolucion
-add constraint fk_copia_devolucion
 foreign key (id_copia) references copias(id);
 
 alter table copias
@@ -658,40 +643,82 @@ INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,a
 
 
 	
--- INSERTAMOS GENEROS	
+
+-- SOCIO (49)
 	
+insert into socio (dni, nombre, apellidos, fecha_nacimiento, email)
+select distinct dni, nombre, concat(apellido_1,' ', apellido_2), cast(fecha_nacimiento as date), email 
+from tmp_videoclub;
 	
+
+
+-- TELEFONO (49)
+
+insert into telefono (valor, id_socio)
+select distinct telefono, s.id_socio 
+from tmp_videoclub tmp
+inner join socio s on tmp.dni = s.dni;
+
+
+
+-- DIRECCION (49)
+
+insert into direccion (id_socio, calle, numero, piso, codigo_postal)
+select distinct s.id_socio, tmp.calle,tmp.numero,concat(tmp.piso, '',tmp.letra),tmp.codigo_postal 
+from tmp_videoclub tmp
+join socio s on tmp.dni = s.dni;
+
+
+
+-- GENERO (13)
+
 insert into genero (nombre)
-select distinct v.genero
-from tmp_videoclub v;
-
-select * from genero g ;
+select distinct genero
+from tmp_videoclub;
 
 
-
--- INSERTAMOS DIRECTORES
+-- DIRECTOR (76)
 
 insert into director (nombre)
-select distinct v.director
-from tmp_videoclub v;
-
-select * from director d ;
+select distinct director
+from tmp_videoclub;
 
 
+-- PELICULA (100)
 
--- INSERTAMOS PELICULAS
-
-alter table peliculas
-alter column sinopsis drop not null;
-
-insert into peliculas (titulo, id_genero, id_director)
-select distinct v.titulo, g.id, d.id
-from tmp_videoclub v
-join genero g on v.genero = g.nombre
-join director d on v.director = d.nombre;
-
-select * from peliculas p ;
+insert into peliculas (titulo, sinopsis, id_genero, id_director)
+select distinct titulo, sinopsis, g.id, d.id 
+from tmp_videoclub tmp
+join genero g on tmp.genero = g.nombre
+join director d on tmp.director = d.nombre;
 
 
+-- COPIAS (512)
+
+insert into copias (referencia_copia, id_pelicula)
+select id_copia, p.id
+from tmp_videoclub tmp
+inner join peliculas p on tmp.titulo = p.titulo;
+
+-- ALQUILER (1088)
+
+insert into alquiler (id_copia, id_socio, fecha_entrega, fecha_devolucion)
+select c.id, s.id_socio, tmp.fecha_alquiler, tmp.fecha_devolucion 
+from tmp_videoclub tmp join socio s on tmp.dni = s.dni
+join copias c on tmp.id_copia = c.referencia_copia;
+   
 
 
+
+-- CUANTAS COPIAS TENGO DISPONIBLES (343)
+
+select count (distinct id_copia) as peliculas_disponibles
+from alquiler
+where fecha_devolucion is not null;
+
+
+-- CUANTAS TENGO SIN DISPONIBILIDAD (501)
+
+select count (distinct id_copia) as peliculas_no_disponibles
+from alquiler
+where fecha_devolucion is null;
