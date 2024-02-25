@@ -83,7 +83,6 @@ alter table alquiler
 add constraint fk_copia_alquiler
 foreign key (id_copia) references copias(id);
 
-
 alter table copias
 add constraint fk_pelicula_copias
 foreign key (id_pelicula) references peliculas(id);
@@ -650,7 +649,8 @@ INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,a
 insert into socio (dni, nombre, apellidos, fecha_nacimiento, email)
 select distinct dni, nombre, concat(apellido_1,' ', apellido_2), cast(fecha_nacimiento as date), email 
 from tmp_videoclub;
-	
+
+select * from socio;
 
 
 -- TELEFONO (49)
@@ -661,14 +661,12 @@ from tmp_videoclub tmp
 inner join socio s on tmp.dni = s.dni;
 
 
-
 -- DIRECCION (49)
 
 insert into direccion (id_socio, calle, numero, piso, codigo_postal)
 select distinct s.id_socio, tmp.calle,tmp.numero,concat(tmp.piso, '',tmp.letra),tmp.codigo_postal 
 from tmp_videoclub tmp
 join socio s on tmp.dni = s.dni;
-
 
 
 -- GENERO (13)
@@ -693,8 +691,8 @@ from tmp_videoclub tmp
 join genero g on tmp.genero = g.nombre
 join director d on tmp.director = d.nombre;
 
-select * from peliculas;
-
+select * from peliculas p;
+ 
 -- COPIAS (308)
 
 insert into copias (id_copia_original, id_pelicula)
@@ -702,24 +700,24 @@ select distinct id_copia, p.id
 from tmp_videoclub tmp
 join peliculas p on tmp.titulo = p.titulo;
 
+select * from copias;
 
 -- ALQUILER (512)
 
 insert into alquiler (id_copia, id_socio, fecha_entrega, fecha_devolucion)
-select c.id, s.id_socio, tmp.fecha_alquiler, tmp.fecha_devolucion 
-from tmp_videoclub tmp join socio s on tmp.dni = s.dni
+select c.id_copia_original,(select s.id_socio from socio s where s.dni = tmp.dni), tmp.fecha_alquiler, tmp.fecha_devolucion 
+from tmp_videoclub tmp 
 join copias c on tmp.id_copia = c.id;
+
+
+select * from alquiler where fecha_devolucion is null;
+
+
+-- CONSULTA NUMERO COPIAS DISPONIBLES (5)
+
+select p.titulo, count(c.id) as numero_de_copias
+from copias c join peliculas p ON c.id_pelicula = p.id
+where c.id not in (select id_copia from alquiler where fecha_devolucion is null)
+group by p.titulo;
    
 
--- CUANTAS COPIAS TENGO DISPONIBLES (139)
-
-select count (distinct id_copia) as peliculas_disponibles
-from alquiler
-where fecha_devolucion is not null;
-
-
--- CUANTAS TENGO SIN DISPONIBILIDAD (303)
-
-select count (distinct id_copia) as peliculas_no_disponibles
-from alquiler
-where fecha_devolucion is null;
